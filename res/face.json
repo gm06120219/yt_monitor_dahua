@@ -1,0 +1,90 @@
+{
+	"service_name": "face",
+	"device_count": 2,
+	"device_list": [
+		{
+			"device_type": "IVSS",
+			"device_hardware_version": "NVR-9732",
+			"ip": "192.168.0.37",
+			"port": 37777,
+			"username": "admin",
+			"password": "admin123",
+			"face_list": [
+				{
+					"channel": 1,
+					"nickname": "三层后门人脸"
+				},
+				{
+					"channel": 2,
+					"nickname": "三层电梯厅人脸"
+				},
+				{
+					"channel": 3,
+					"nickname": "三层电梯厅人脸"
+				},
+				{
+					"channel": 4,
+					"nickname": "四层后门人脸"
+				},
+				{
+					"channel": 5,
+					"nickname": "四层电梯厅人脸"
+				},
+				{
+					"channel": 6,
+					"nickname": "四层楼梯人脸"
+				},
+				{
+					"channel": 7,
+					"nickname": "五层楼梯人脸"
+				}
+			]
+		},
+		{
+			"device_type": "IVSS",
+			"device_hardware_version": "NVR-9732",
+			"ip": "192.168.0.38",
+			"port": 37777,
+			"username": "admin",
+			"password": "admin123",
+			"face_list": [
+				{
+					"channel": 1,
+					"nickname": "一层客房大门人脸"
+				},
+				{
+					"channel": 2,
+					"nickname": "一层后门外人脸"
+				},
+				{
+					"channel": 3,
+					"nickname": "一层后门内人脸"
+				},
+				{
+					"channel": 4,
+					"nickname": "一层消防楼梯人脸"
+				},
+				{
+					"channel": 5,
+					"nickname": "一层大门人脸"
+				},
+				{
+					"channel": 6,
+					"nickname": "一层电梯厅人脸"
+				},
+				{
+					"channel": 7,
+					"nickname": "二层后门人脸"
+				},
+				{
+					"channel": 8,
+					"nickname": "二层楼梯人脸"
+				},
+				{
+					"channel": 9,
+					"nickname": "二层电梯厅人脸"
+				}
+			]
+		}
+	]
+}
