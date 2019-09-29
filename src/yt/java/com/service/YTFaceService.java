@@ -14,6 +14,7 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 
 import yt.java.com.controller.YTMainController;
+import yt.java.com.tools.JSONTools;
 import yt.java.com.view.YTServiceView;
 
 public class YTFaceService extends YTService {
@@ -43,7 +44,12 @@ public class YTFaceService extends YTService {
 				_logger.info("Start client connect.");
 				
 				// load config
-				_config = YTFaceService.LoadConfig();
+				try {
+					_config = YTFaceService.LoadConfig();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 				if(_config == null) {
 					// TODO stop service, and show alert dialog
 					return;
@@ -56,27 +62,27 @@ public class YTFaceService extends YTService {
 		};
 	}
 
-	public static JSONObject LoadConfig() {
+	public static JSONObject LoadConfig() throws IOException {
 		_logger.info("Load config");
 		JSONObject json = null;
 		try {
-			File jsonFile = new File(PROPERTIES_PATH);
-			FileReader fileReader = new FileReader(jsonFile);
-
-			Reader reader = new InputStreamReader(new FileInputStream(jsonFile), "utf-8");
-			int ch = 0;
-			StringBuffer sb = new StringBuffer();
-			while ((ch = reader.read()) != -1) {
-				sb.append((char) ch);
-			}
-			fileReader.close();
-			reader.close();
-			json = JSONObject.parseObject(sb.toString());
+			json = JSONTools.ReadJsonFile(PROPERTIES_PATH);
 			_logger.info("Service config: " + json.toJSONString());
 		} catch (IOException e) {
 			_logger.warn("Service config: null.");
+			throw e;
 		}
 		return json;
+	}
+	
+	public static void SaveConfig(JSONObject content) throws IOException {
+		_logger.info("Save config");
+		try {
+			JSONTools.WriteJsonFile(PROPERTIES_PATH, content);
+			_logger.info("Save service config success. Content: " + content.toJSONString());
+		} catch(IOException e) {
+			_logger.warn("Save service config execption: " + e.toString());
+		}
 	}
 
 }

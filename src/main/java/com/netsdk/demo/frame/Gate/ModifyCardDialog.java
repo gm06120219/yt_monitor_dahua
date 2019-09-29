@@ -42,7 +42,7 @@ public class ModifyCardDialog extends JDialog{
 		setLayout(new BorderLayout());
 	    setModal(true);	
 		pack();
-		setSize(520, 390);
+		setSize(520, 600);
 	    setResizable(false);
 	    setLocationRelativeTo(null);
 	    setDefaultCloseOperation(DISPOSE_ON_CLOSE);   // 释放窗体

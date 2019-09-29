@@ -9,6 +9,7 @@ import com.sun.jna.Memory;
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
 
+import main.java.com.netsdk.demo.module.LoginModule;
 import main.java.com.netsdk.lib.NetSDKLib;
 import main.java.com.netsdk.lib.NetSDKLib.CFG_ACCESS_EVENT_INFO;
 import main.java.com.netsdk.lib.NetSDKLib.CtrlType;
@@ -17,10 +18,11 @@ import main.java.com.netsdk.lib.NetSDKLib.LLong;
 import main.java.com.netsdk.lib.NetSDKLib.NET_CTRL_ACCESS_OPEN;
 import main.java.com.netsdk.lib.NetSDKLib.NET_DOOR_STATUS_INFO;
 import main.java.com.netsdk.lib.NetSDKLib.NET_TIME;
+import main.java.com.netsdk.lib.NetSDKLib.fMessCallBack;
 import main.java.com.netsdk.lib.ToolKits;
 
 public class YTDahuaAccess extends YTDahuaConnecter {
-	private static Logger logger = LogManager.getLogger();
+	private static Logger _logger = LogManager.getLogger();
 
 	private String _ip;
 	private String _username;
@@ -32,6 +34,8 @@ public class YTDahuaAccess extends YTDahuaConnecter {
 	private YTDahuaClient _client;
 	private DefaultSubscribeCallback _subscribeCallback;
 	private LLong _loginHandle;
+
+	private boolean _is_listening = false;
 
 	public YTDahuaAccess(JSONObject info) {
 		_ip = info.getString("ip");
@@ -65,10 +69,10 @@ public class YTDahuaAccess extends YTDahuaConnecter {
 		boolean ret = false;
 		_loginHandle = this._client.Login(this._ip, this._port, this._username, this._password);
 		if (_loginHandle.longValue() == 0) {
-			logger.warn("Login Failure. By IP: " + _ip);
+			_logger.warn("Login Failure. By IP: " + _ip);
 			ret = false;
 		} else {
-			logger.info("Login Success. By IP: " + _ip);
+			_logger.info("Login Success. By IP: " + _ip);
 			ret = true;
 		}
 		return ret;
@@ -111,7 +115,7 @@ public class YTDahuaAccess extends YTDahuaConnecter {
 	 * @param isOpen
 	 */
 	public boolean SetStatus(boolean isOpen, int channel) {
-		logger.info("Access Control: IP- " + _ip + " Channel-" + channel + " Open-" + isOpen);
+		_logger.info("Access Control: IP- " + _ip + " Channel-" + channel + " Open-" + isOpen);
 		int emType;
 
 		NET_CTRL_ACCESS_OPEN param = new NET_CTRL_ACCESS_OPEN();
@@ -128,9 +132,9 @@ public class YTDahuaAccess extends YTDahuaConnecter {
 		}
 		boolean ret = YTDahuaSDK.netsdk.CLIENT_ControlDevice(_loginHandle, emType, param.getPointer(), 1500);
 		if (ret == true) {
-			logger.info("Access Control success");
+			_logger.info("Access Control success");
 		} else {
-			logger.warn("Access Control failure. Error no: " + YTDahuaSDK.netsdk.CLIENT_GetLastError());
+			_logger.warn("Access Control failure. Error no: " + YTDahuaSDK.netsdk.CLIENT_GetLastError());
 		}
 		return ret;
 	}
@@ -145,7 +149,7 @@ public class YTDahuaAccess extends YTDahuaConnecter {
 
 		int channel = FindChannelByNickname(nickname);
 		if (channel == -1) {
-			logger.warn("Cannot find device with nickname: " + nickname);
+			_logger.warn("Cannot find device with nickname: " + nickname);
 			return null;
 		}
 		
@@ -169,10 +173,10 @@ public class YTDahuaAccess extends YTDahuaConnecter {
 			retJson.put("nickname", nickname);
 			retJson.put("channel", channel);
 			retJson.put("door_status", info.emStateType);
-			logger.debug("IP: " + _ip + " nickname:" + nickname + " channel:" + channel + " status:" + info.emStateType
+			_logger.debug("IP: " + _ip + " nickname:" + nickname + " channel:" + channel + " status:" + info.emStateType
 					+ " ret_length:" + pRetLen.getValue());
 		} else {
-			logger.warn("Cannot get device status with ip: " + _ip + " channel: " + channel);
+			_logger.warn("Cannot get device status with ip: " + _ip + " channel: " + channel);
 		}
 
 		return retJson;
@@ -200,10 +204,10 @@ public class YTDahuaAccess extends YTDahuaConnecter {
 				retJson.put("nickname", nickname);
 				retJson.put("channel", channel);
 				retJson.put("door_status", info.emStateType);
-				logger.debug("IP: " + _ip + " nickname:" + nickname + " channel:" + channel + " status:" + info.emStateType
+				_logger.debug("IP: " + _ip + " nickname:" + nickname + " channel:" + channel + " status:" + info.emStateType
 						+ " ret_length:" + pRetLen.getValue());
 			} else {
-				logger.warn("Cannot get device status with ip: " + _ip + " channel: " + channel);
+				_logger.warn("Cannot get device status with ip: " + _ip + " channel: " + channel);
 			}
 			retArray.add(retJson);
 		}
@@ -211,11 +215,53 @@ public class YTDahuaAccess extends YTDahuaConnecter {
 		return retArray;
 	}
 
+	/**
+	 * Start device alarm listen 
+	 * @param message_cb callback of alarm message pop
+	 * @return
+	 */
+	public boolean StartAlarmListen (fMessCallBack message_cb) {
+		_logger.info("Start alarm listening.  IP: " + this._ip);
+		if (_is_listening) {
+			// already listening
+			_logger.warn("Already listening.  IP: " + this._ip);
+			return true;
+		}
+		
+		YTDahuaSDK.netsdk.CLIENT_SetDVRMessCallBack(message_cb, null); // set alarm listen callback
+
+		if (!YTDahuaSDK.netsdk.CLIENT_StartListenEx(LoginModule.m_hLoginHandle)) {
+			_logger.warn("CLIENT_StartListenEx Failed!" + ToolKits.getErrorCodePrint());
+			return false;
+		} else { 
+			_logger.info("CLIENT_StartListenEx success."); 
+		}
+		
+		_is_listening = true;
+		return true;
+	}
+	
+	public boolean StopAlarmListen () {
+		if (!_is_listening) {
+			return true;
+		}
+		
+	   	if (!LoginModule.netsdk.CLIENT_StopListen(LoginModule.m_hLoginHandle)) { 
+	   		_logger.warn("CLIENT_StopListen Failed!" + ToolKits.getErrorCodePrint());
+			return false;
+		} else { 
+			_logger.info("CLIENT_StopListen success."); 
+		}
+	   	
+	   	_is_listening = false;	
+		return true;
+	}
+	
 	// TODO
 	public JSONObject GetConfig(String nickname) {
 		int channel = FindChannelByNickname(nickname);
 		if (channel == -1) {
-			logger.warn("Cannot find device with nickname: " + nickname);
+			_logger.warn("Cannot find device with nickname: " + nickname);
 			return null;
 		}
 
@@ -230,7 +276,7 @@ public class YTDahuaAccess extends YTDahuaConnecter {
 			retJson.put("channel", channel);
 			retJson.put("door_status", 2);
 		} else {
-			logger.warn("Get config failure. error no: ");
+			_logger.warn("Get config failure. error no: ");
 		}
 		return retJson;
 	}
@@ -262,9 +308,9 @@ public class YTDahuaAccess extends YTDahuaConnecter {
 		boolean ret = YTDahuaSDK.netsdk.CLIENT_ControlDevice(_loginHandle, CtrlType.CTRLTYPE_CTRL_REBOOT,
 				param.getPointer(), 3000);
 		if (ret == true) {
-			logger.info("Access reboot success");
+			_logger.info("Access reboot success");
 		} else {
-			logger.warn("Access reboot failure. Error no: " + YTDahuaSDK.netsdk.CLIENT_GetLastError());
+			_logger.warn("Access reboot failure. Error no: " + YTDahuaSDK.netsdk.CLIENT_GetLastError());
 		}
 		return ret;
 	}
@@ -273,9 +319,9 @@ public class YTDahuaAccess extends YTDahuaConnecter {
 	// TODO add log
 	@Override
 	public void run() {
-		logger.info("AccessControl client is running.");
+		_logger.info("AccessControl client is running.");
 		if (Connect() != true) {
-			logger.info("AccessControl client stop by connect failure.");
+			_logger.info("AccessControl client stop by connect failure.");
 			stop = true;
 			return;
 		}

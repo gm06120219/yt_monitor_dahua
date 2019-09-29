@@ -2444,4 +2444,20 @@ public final class Res {
 	public String getConf() {
 		return bundle.getString("CONF");
 	}
+	
+	public String getFaceDevice() {
+		return bundle.getString("FACE_DEVICE");
+	}
+	
+	public String getEdit() {
+		return bundle.getString("EDIT");
+	}
+	
+	public String getNickname() {
+		return bundle.getString("NICKNAME");
+	}
+	
+	public String getSave() {
+		return bundle.getString("SAVE");
+	}
 }

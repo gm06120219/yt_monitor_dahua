@@ -43,7 +43,7 @@ public class CardManegerDialog extends JDialog{
 	    setModal(true);  
 	    pack();
 		setSize(700, 390);
-	    setResizable(false);
+//	    setResizable(false);
 	    setLocationRelativeTo(null);  
 	    setDefaultCloseOperation(DISPOSE_ON_CLOSE);   // 释放窗体
 		
